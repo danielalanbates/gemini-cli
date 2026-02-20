@@ -41,6 +41,7 @@ import { checkPermissions } from './hooks/atCommandProcessor.js';
 import { MessageType, StreamingState } from './types.js';
 import { ToolActionsProvider } from './contexts/ToolActionsContext.js';
 import {
+  type StartupWarning,
   type EditorType,
   type Config,
   type IdeInfo,
@@ -186,7 +187,7 @@ function isToolAwaitingConfirmation(
 
 interface AppContainerProps {
   config: Config;
-  startupWarnings?: string[];
+  startupWarnings?: StartupWarning[];
   version: string;
   initializationResult: InitializationResult;
   resumedSessionData?: ResumedSessionData;
@@ -1438,6 +1439,13 @@ Logging in with Google... Restarting Gemini CLI to continue.
 
   const { isFolderTrustDialogOpen, handleFolderTrustSelect, isRestarting } =
     useFolderTrust(settings, setIsTrustedFolder, historyManager.addItem);
+
+  const policyUpdateConfirmationRequest =
+    config.getPolicyUpdateConfirmationRequest();
+  const [isPolicyUpdateDialogOpen, setIsPolicyUpdateDialogOpen] = useState(
+    !!policyUpdateConfirmationRequest,
+  );
+
   const {
     needsRestart: ideNeedsRestart,
     restartReason: ideTrustRestartReason,
@@ -1596,6 +1604,8 @@ Logging in with Google... Restarting Gemini CLI to continue.
     streamingState,
     shouldShowFocusHint,
     retryStatus,
+    loadingPhrasesMode: settings.merged.ui.loadingPhrases,
+    customWittyPhrases: settings.merged.ui.customWittyPhrases,
   });
 
   const handleGlobalKeypress = useCallback(
@@ -1908,6 +1918,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
     (shouldShowRetentionWarning && retentionCheckComplete) ||
     shouldShowIdePrompt ||
     isFolderTrustDialogOpen ||
+    isPolicyUpdateDialogOpen ||
     adminSettingsChanged ||
     !!commandConfirmationRequest ||
     !!authConsentRequest ||
@@ -2135,6 +2146,8 @@ Logging in with Google... Restarting Gemini CLI to continue.
       isResuming,
       shouldShowIdePrompt,
       isFolderTrustDialogOpen: isFolderTrustDialogOpen ?? false,
+      isPolicyUpdateDialogOpen,
+      policyUpdateConfirmationRequest,
       isTrustedFolder,
       constrainHeight,
       showErrorDetails,
@@ -2257,6 +2270,8 @@ Logging in with Google... Restarting Gemini CLI to continue.
       isResuming,
       shouldShowIdePrompt,
       isFolderTrustDialogOpen,
+      isPolicyUpdateDialogOpen,
+      policyUpdateConfirmationRequest,
       isTrustedFolder,
       constrainHeight,
       showErrorDetails,
@@ -2354,6 +2369,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
       vimHandleInput,
       handleIdePromptComplete,
       handleFolderTrustSelect,
+      setIsPolicyUpdateDialogOpen,
       setConstrainHeight,
       onEscapePromptChange: handleEscapePromptChange,
       refreshStatic,
@@ -2438,6 +2454,7 @@ Logging in with Google... Restarting Gemini CLI to continue.
       vimHandleInput,
       handleIdePromptComplete,
       handleFolderTrustSelect,
+      setIsPolicyUpdateDialogOpen,
       setConstrainHeight,
       handleEscapePromptChange,
       refreshStatic,
